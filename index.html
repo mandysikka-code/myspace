@@ -4,135 +4,189 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>DriveDial - Hands-Free Voice Assistant</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg-1: #05070f;
-    --bg-2: #0c1024;
-    --surface: rgba(255,255,255,0.055);
-    --surface-solid: #131a2c;
-    --border: rgba(255,255,255,0.09);
-    --primary: #4f7cff;
-    --primary-2: #7c5cff;
-    --listening: #ff4d5e;
+    --bg: #150f0c;
+    --surface: #1e1611;
+    --surface-2: #281d16;
+    --border: #3a2a1f;
+    --accent: #ff9d3d;
+    --accent-2: #ffce54;
+    --accent-dim: #d97a24;
+    --accent-ink: #2b1400;
+    --listening: #ff5470;
     --listening-2: #ff8a5c;
-    --success: #22c98a;
-    --text: #f4f6ff;
-    --text-dim: #93a0c2;
-    --text-faint: #5c6690;
-    --radius-lg: 22px;
-    --radius-md: 14px;
-    --radius-sm: 10px;
+    --listening-dim: #d93958;
+    --text: #fbf3ea;
+    --text-dim: #cbb6a4;
+    --text-faint: #83705f;
+    --font-display: "Sora", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-body: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --radius-xl: 26px;
+    --radius-lg: 18px;
+    --radius-md: 12px;
   }
 
   * { box-sizing: border-box; }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--font-body);
     background:
-      radial-gradient(60% 50% at 15% 0%, rgba(79,124,255,0.20) 0%, rgba(79,124,255,0) 60%),
-      radial-gradient(55% 45% at 100% 15%, rgba(124,92,255,0.18) 0%, rgba(124,92,255,0) 60%),
-      radial-gradient(70% 60% at 50% 100%, rgba(34,201,138,0.08) 0%, rgba(34,201,138,0) 60%),
-      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-    background-attachment: fixed;
+      radial-gradient(65% 40% at 50% -5%, rgba(255,157,61,0.14) 0%, rgba(255,157,61,0) 60%),
+      var(--bg);
     color: var(--text);
     margin: 0;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 28px 18px 40px;
+    padding: 32px 18px 40px;
   }
 
   .container {
     width: 100%;
-    max-width: 460px;
+    max-width: 440px;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 22px;
+    gap: 26px;
   }
 
   /* ---------- Header ---------- */
   .app-header {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: 4px;
-    text-align: center;
-    margin-bottom: 4px;
+    gap: 14px;
+    width: 100%;
   }
   .logo-badge {
-    width: 52px;
-    height: 52px;
+    position: relative;
+    width: 54px;
+    height: 54px;
     border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.6rem;
-    background: linear-gradient(145deg, var(--primary), var(--primary-2));
-    box-shadow: 0 8px 24px rgba(79,124,255,0.35);
-    margin-bottom: 8px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    flex-shrink: 0;
+    overflow: visible;
   }
+  .logo-badge::before {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    opacity: 0.35;
+    filter: blur(10px);
+    animation: badgeGlow 2.4s ease-in-out infinite;
+    z-index: -1;
+  }
+  @keyframes badgeGlow {
+    0%, 100% { opacity: 0.25; transform: scale(0.94); }
+    50% { opacity: 0.55; transform: scale(1.08); }
+  }
+
+  .car-icon { width: 34px; height: 34px; overflow: visible; }
+  .car-icon .car-body {
+    animation: carBob 1.8s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  @keyframes carBob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-1.1px); }
+  }
+  .car-icon .wheel-spokes {
+    animation: wheelSpin 1.1s linear infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  @keyframes wheelSpin {
+    to { transform: rotate(360deg); }
+  }
+  .car-icon .headlight {
+    animation: headlightBlink 2.4s ease-in-out infinite;
+  }
+  @keyframes headlightBlink {
+    0%, 40%, 100% { opacity: 1; }
+    20% { opacity: 0.45; }
+  }
+  .car-icon .speed-line {
+    animation: speedTrail 1.1s ease-in-out infinite;
+  }
+  .car-icon .speed-line:nth-child(1) { animation-delay: 0s; }
+  .car-icon .speed-line:nth-child(2) { animation-delay: 0.15s; }
+  .car-icon .speed-line:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes speedTrail {
+    0% { opacity: 0; transform: translateX(3px); }
+    40% { opacity: 0.9; }
+    100% { opacity: 0; transform: translateX(-4px); }
+  }
+  .app-header .title-block { min-width: 0; }
   .app-header h1 {
     margin: 0;
-    font-size: 1.55rem;
+    font-family: var(--font-display);
+    font-size: 1.4rem;
     font-weight: 800;
-    letter-spacing: -0.02em;
-    background: linear-gradient(90deg, #ffffff, #b9c6ff);
+    letter-spacing: -0.01em;
+    background: linear-gradient(90deg, var(--accent), var(--accent-2));
     -webkit-background-clip: text;
     background-clip: text;
     color: transparent;
   }
   .app-header p {
-    margin: 0;
-    font-size: 0.88rem;
+    margin: 2px 0 0;
+    font-size: 0.82rem;
     color: var(--text-dim);
   }
 
   /* ---------- Status banner ---------- */
   .status-banner {
     width: 100%;
-    padding: 18px 20px;
+    padding: 15px 18px;
     background: var(--surface);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
     border-radius: var(--radius-lg);
     text-align: center;
-    font-size: 1.08rem;
+    font-size: 0.98rem;
     font-weight: 600;
     border: 1px solid var(--border);
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    transition: border-color 0.25s ease, background 0.25s ease;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
   }
   .status-dot {
-    width: 9px;
-    height: 9px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--text-faint);
     flex-shrink: 0;
-    transition: background 0.3s ease, box-shadow 0.3s ease;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
   }
   .status-banner.is-listening {
-    border-color: rgba(255,77,94,0.45);
-    box-shadow: 0 0 0 1px rgba(255,77,94,0.15), 0 10px 30px rgba(255,77,94,0.12);
+    border-color: var(--listening-dim);
+    background: rgba(255, 84, 112, 0.08);
   }
   .status-banner.is-listening .status-dot {
     background: var(--listening);
-    box-shadow: 0 0 12px var(--listening);
+    box-shadow: 0 0 10px var(--listening);
     animation: dotPulse 1s infinite;
   }
   @keyframes dotPulse {
-    0%, 100% { opacity: 1; } 50% { opacity: 0.35; }
+    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
   }
 
   /* ---------- Mic button ---------- */
   .mic-wrap {
     position: relative;
-    width: 190px;
-    height: 190px;
+    width: 184px;
+    height: 184px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -141,32 +195,32 @@
     position: absolute;
     inset: 0;
     border-radius: 50%;
-    border: 1.5px solid rgba(79,124,255,0.35);
+    border: 1.5px solid var(--accent-dim);
     opacity: 0;
   }
   .mic-wrap.listening .mic-ring {
     opacity: 1;
     animation: ringExpand 1.8s ease-out infinite;
-    border-color: rgba(255,77,94,0.55);
+    border-color: var(--listening-dim);
   }
   .mic-wrap.listening .mic-ring.r2 { animation-delay: 0.6s; }
   .mic-wrap.listening .mic-ring.r3 { animation-delay: 1.2s; }
   @keyframes ringExpand {
-    0% { transform: scale(0.78); opacity: 0.65; }
-    100% { transform: scale(1.35); opacity: 0; }
+    0% { transform: scale(0.76); opacity: 0.6; }
+    100% { transform: scale(1.32); opacity: 0; }
   }
 
   .mic-button {
     position: relative;
-    width: 156px;
-    height: 156px;
+    width: 148px;
+    height: 148px;
     border-radius: 50%;
     border: none;
-    background: linear-gradient(150deg, var(--primary), var(--primary-2));
-    color: white;
-    font-size: 3.6rem;
+    background: linear-gradient(150deg, var(--accent), var(--accent-2));
+    color: var(--accent-ink);
+    font-size: 3.4rem;
     cursor: pointer;
-    box-shadow: 0 12px 40px rgba(79,124,255,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+    box-shadow: 0 0 0 6px var(--surface), 0 14px 30px rgba(255, 157, 61, 0.28);
     transition: transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease;
     display: flex;
     justify-content: center;
@@ -174,46 +228,43 @@
     z-index: 1;
   }
   .mic-button:active { transform: scale(0.96); }
-  .mic-button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .mic-button:disabled { opacity: 0.4; cursor: not-allowed; }
   .mic-button.listening {
     background: linear-gradient(150deg, var(--listening), var(--listening-2));
-    box-shadow: 0 12px 46px rgba(255,77,94,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
-    animation: micPulse 1.5s infinite;
+    box-shadow: 0 0 0 6px var(--surface), 0 14px 34px rgba(255, 84, 112, 0.32);
+    animation: micPulse 1.4s infinite;
   }
   @keyframes micPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.045); }
+    50% { transform: scale(1.04); }
   }
 
   .transcript-box {
-    font-size: 1.15rem;
-    font-style: italic;
+    font-size: 1.05rem;
     color: var(--text-dim);
     text-align: center;
-    min-height: 1.6rem;
+    min-height: 1.5rem;
     padding: 0 12px;
   }
 
   /* ---------- Cards ---------- */
   .card {
     background: var(--surface);
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
     width: 100%;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-xl);
     padding: 22px;
     border: 1px solid var(--border);
   }
 
-  .btn-row { display: flex; gap: 10px; margin-bottom: 14px; }
+  .btn-row { display: flex; gap: 10px; margin-bottom: 10px; }
 
   .btn {
-    background: rgba(255,255,255,0.06);
+    background: var(--surface-2);
     color: var(--text);
     border: 1px solid var(--border);
     padding: 13px 16px;
     border-radius: var(--radius-md);
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     font-weight: 600;
     cursor: pointer;
     width: 100%;
@@ -221,113 +272,210 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+    transition: background 0.18s ease, transform 0.15s ease, border-color 0.18s ease;
   }
-  .btn:hover { background: rgba(255,255,255,0.11); border-color: rgba(255,255,255,0.18); }
+  .btn:hover { background: #332619; border-color: #4a3624; }
   .btn:active { transform: scale(0.98); }
-  .btn.primary-ghost {
-    background: linear-gradient(145deg, rgba(79,124,255,0.22), rgba(124,92,255,0.16));
-    border-color: rgba(124,92,255,0.4);
+  .btn.primary {
+    background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    font-weight: 700;
   }
-  .btn.primary-ghost:hover { background: linear-gradient(145deg, rgba(79,124,255,0.32), rgba(124,92,255,0.24)); }
+  .btn.primary:hover { filter: brightness(1.08); }
 
   .card-heading {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 4px 0 14px;
+    margin: 18px 0 14px;
   }
+  .card-heading.first { margin-top: 0; }
   .card-heading h3 {
     margin: 0;
-    font-size: 1rem;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
     font-weight: 700;
     color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .card-subtext {
+    margin: -8px 0 14px;
+    font-size: 0.78rem;
+    color: var(--text-faint);
+    line-height: 1.4;
+  }
+
+  .import-toggle {
+    width: 100%;
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.18s ease, border-color 0.18s ease;
+  }
+  .import-toggle:hover { background: #332619; border-color: var(--accent-dim); }
+  .import-toggle[aria-expanded="true"] {
+    border-color: var(--accent-dim);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+  .chevron {
+    display: inline-block;
+    font-size: 1.1rem;
+    color: var(--accent);
+    transition: transform 0.25s ease;
+  }
+  .import-toggle[aria-expanded="true"] .chevron { transform: rotate(180deg); }
+
+  .import-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s ease, border-color 0.18s ease;
+    background: var(--surface-2);
+    border: 1px solid transparent;
+    border-top: none;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
+  }
+  .import-panel.open {
+    grid-template-rows: 1fr;
+    border-color: var(--accent-dim);
+    margin-bottom: 4px;
+  }
+  .import-panel-inner {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 14px;
+  }
+  .import-panel.open .import-panel-inner {
+    padding: 14px 14px 16px;
+  }
+
+  .import-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .import-tile {
+    background: var(--surface-2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 12px 6px 10px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.15s ease;
+  }
+  .import-tile:hover { background: #332619; border-color: var(--accent-dim); }
+  .import-tile:active { transform: scale(0.97); }
+  .import-tile .tile-icon { font-size: 1.35rem; }
+  .import-tile .tile-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-align: center;
+    line-height: 1.2;
+    color: var(--text-dim);
   }
   .count-badge {
-    background: rgba(124,92,255,0.18);
-    color: #c9d1ff;
-    font-size: 0.78rem;
+    background: rgba(255, 157, 61, 0.14);
+    color: var(--accent);
+    font-size: 0.76rem;
     font-weight: 700;
     padding: 3px 10px;
     border-radius: 999px;
-    border: 1px solid rgba(124,92,255,0.35);
+    border: 1px solid rgba(255, 157, 61, 0.32);
   }
 
   .contact-list {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
   }
   .contact-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(255,255,255,0.045);
-    border: 1px solid rgba(255,255,255,0.06);
-    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    padding: 11px 12px;
     border-radius: var(--radius-md);
-    transition: background 0.2s ease, border-color 0.2s ease;
+    transition: border-color 0.18s ease;
   }
-  .contact-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); }
+  .contact-item:hover { border-color: #4a3624; }
 
   .contact-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .avatar {
-    width: 42px;
-    height: 42px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
-    font-size: 0.95rem;
-    color: white;
+    font-size: 0.88rem;
+    color: var(--accent-ink);
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
   }
   .contact-text { min-width: 0; }
   .contact-name {
     font-weight: 700;
-    font-size: 1rem;
+    font-size: 0.98rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .contact-phone { color: var(--text-dim); font-size: 0.82rem; }
+  .contact-phone { color: var(--text-dim); font-size: 0.8rem; }
 
   .call-btn {
-    background: linear-gradient(145deg, var(--success), #1aa571);
-    color: white;
+    background: linear-gradient(120deg, var(--accent), var(--accent-2));
+    color: var(--accent-ink);
     text-decoration: none;
-    padding: 9px 16px;
-    border-radius: var(--radius-sm);
+    padding: 9px 15px;
+    border-radius: var(--radius-md);
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.86rem;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 6px;
-    box-shadow: 0 6px 18px rgba(34,201,138,0.28);
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, filter 0.18s ease;
   }
+  .call-btn:hover { filter: brightness(1.08); }
   .call-btn:active { transform: scale(0.95); }
 
   .empty-state {
     text-align: center;
     color: var(--text-faint);
-    font-size: 0.9rem;
-    padding: 18px 8px;
+    font-size: 0.88rem;
+    padding: 16px 8px;
   }
 
   footer.hint {
     text-align: center;
     color: var(--text-faint);
-    font-size: 0.78rem;
+    font-size: 0.76rem;
     line-height: 1.5;
-    padding: 4px 10px 0;
+    padding: 2px 10px 0;
   }
 
   @media (max-width: 380px) {
-    .mic-wrap { width: 160px; height: 160px; }
-    .mic-button { width: 132px; height: 132px; font-size: 3rem; }
+    .mic-wrap { width: 158px; height: 158px; }
+    .mic-button { width: 128px; height: 128px; font-size: 2.8rem; }
   }
 </style>
 </head>
@@ -335,9 +483,41 @@
 <div class="container">
 
   <div class="app-header">
-    <div class="logo-badge">🚗</div>
-    <h1>DriveDial</h1>
-    <p>Hands-free voice calling, built for the road</p>
+    <div class="logo-badge">
+      <svg class="car-icon" viewBox="0 0 48 30" xmlns="http://www.w3.org/2000/svg" style="color: var(--accent-ink);">
+        <line class="speed-line" x1="-2" y1="10" x2="4" y2="10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+        <line class="speed-line" x1="-4" y1="15" x2="3" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <line class="speed-line" x1="-2" y1="20" x2="4" y2="20" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+
+        <g class="car-body">
+          <path d="M6,22 C6,18.5 8,17 11,17 L15,11 C16,9 18,8 21,8 L29,8 C32,8 34,9 35,11 L39,17 C42,17 44,18.5 44,22 L44,23.5 C44,24.5 43.3,25 42.5,25 L7.5,25 C6.7,25 6,24.5 6,23.5 Z" fill="currentColor"/>
+          <path d="M17,11 L19,17 L31,17 L29,11 Z" fill="var(--accent)" opacity="0.9"/>
+          <line x1="24" y1="11" x2="24" y2="17" stroke="var(--accent)" stroke-width="1"/>
+          <circle class="headlight" cx="43" cy="20" r="1.4" fill="#ffffff"/>
+        </g>
+
+        <g>
+          <circle cx="14" cy="24.5" r="4" fill="#140d08"/>
+          <circle cx="14" cy="24.5" r="4" fill="none" stroke="currentColor" stroke-width="0.8"/>
+          <g class="wheel-spokes">
+            <line x1="14" y1="21.2" x2="14" y2="27.8" stroke="currentColor" stroke-width="0.9"/>
+            <line x1="11.2" y1="24.5" x2="16.8" y2="24.5" stroke="currentColor" stroke-width="0.9"/>
+          </g>
+        </g>
+        <g>
+          <circle cx="37" cy="24.5" r="4" fill="#140d08"/>
+          <circle cx="37" cy="24.5" r="4" fill="none" stroke="currentColor" stroke-width="0.8"/>
+          <g class="wheel-spokes">
+            <line x1="37" y1="21.2" x2="37" y2="27.8" stroke="currentColor" stroke-width="0.9"/>
+            <line x1="34.2" y1="24.5" x2="39.8" y2="24.5" stroke="currentColor" stroke-width="0.9"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="title-block">
+      <h1>DriveDial</h1>
+      <p>Hands-free voice calling, built for the road</p>
+    </div>
   </div>
 
   <div id="statusBanner" class="status-banner">
@@ -355,10 +535,33 @@
   <div id="transcript" class="transcript-box">Say a command to get started</div>
 
   <div class="card">
-    <div class="btn-row">
-      <button id="importBtn" class="btn primary-ghost">📋 Import Contacts</button>
+    <button id="importToggle" class="import-toggle" type="button" aria-expanded="false" aria-controls="importPanel">
+      <span class="import-toggle-label">📥 Import Contacts</span>
+      <span class="chevron" id="importChevron">⌄</span>
+    </button>
+    <div id="importPanel" class="import-panel">
+      <div class="import-panel-inner">
+        <div class="import-grid">
+          <button id="importPhoneBtn" class="import-tile" type="button">
+            <span class="tile-icon">📱</span>
+            <span class="tile-label">Phone</span>
+          </button>
+          <button id="importExcelBtn" class="import-tile" type="button">
+            <span class="tile-icon">📊</span>
+            <span class="tile-label">Excel / CSV</span>
+          </button>
+          <button id="importVcfBtn" class="import-tile" type="button">
+            <span class="tile-icon">💬</span>
+            <span class="tile-label">WhatsApp (.vcf)</span>
+          </button>
+        </div>
+        <p class="card-subtext">WhatsApp doesn't let any app read a group's members directly — export the group's contacts as a <strong>.vcf</strong> file from your phone's contacts app (Share &rarr; Export as vCard), then import it here.</p>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls,.csv" hidden>
+        <input type="file" id="vcfFileInput" accept=".vcf,.vcard,text/vcard" hidden>
+
+        <button id="addDemoBtn" class="btn">➕ Add Contact Manually</button>
+      </div>
     </div>
-    <button id="addDemoBtn" class="btn">➕ Add Contact</button>
 
     <div class="card-heading">
       <h3>Loaded Contacts</h3>
@@ -385,29 +588,125 @@
     const transcriptEl = document.getElementById('transcript');
     const contactListEl = document.getElementById('contactList');
     const contactCountEl = document.getElementById('contactCount');
-    const importBtn = document.getElementById('importBtn');
+    const importPhoneBtn = document.getElementById('importPhoneBtn');
+    const importExcelBtn = document.getElementById('importExcelBtn');
+    const importVcfBtn = document.getElementById('importVcfBtn');
+    const excelFileInput = document.getElementById('excelFileInput');
+    const vcfFileInput = document.getElementById('vcfFileInput');
+    const importToggle = document.getElementById('importToggle');
+    const importPanel = document.getElementById('importPanel');
 
-    const AVATAR_GRADIENTS = [
-        ['#4f7cff', '#7c5cff'],
-        ['#22c98a', '#1aa571'],
-        ['#ff8a5c', '#ff4d5e'],
-        ['#f7b733', '#fc4a1a'],
-        ['#7c5cff', '#c96bff'],
-        ['#00c6ff', '#4f7cff']
-    ];
+    importToggle.addEventListener('click', () => {
+        const isOpen = importPanel.classList.toggle('open');
+        importToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
 
     function initials(name) {
-        const parts = name.trim().split(/\s+/).filter(Boolean);
+        const safeName = (name || '').toString();
+        const parts = safeName.trim().split(/\s+/).filter(Boolean);
         if (parts.length === 0) return '?';
         if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
         return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
 
-    function colorFor(name) {
-        let hash = 0;
-        for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        const pair = AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
-        return `linear-gradient(145deg, ${pair[0]}, ${pair[1]})`;
+    // Merge helper shared by every import source: dedupes by phone number
+    // so importing from phone + Excel + WhatsApp doesn't create duplicates.
+    function normalizePhone(p) {
+        return (p || '').toString().replace(/[^\d+]/g, '');
+    }
+
+    function addContacts(newOnes) {
+        const existingPhones = new Set(contacts.map(c => normalizePhone(c.phone)));
+        let added = 0;
+        (newOnes || []).forEach(c => {
+            const rawPhone = (c.phone || '').toString().trim();
+            const phoneKey = normalizePhone(rawPhone);
+            if (!phoneKey || existingPhones.has(phoneKey)) return;
+            existingPhones.add(phoneKey);
+            const rawName = (c.name || '').toString().trim();
+            contacts.push({ name: rawName || 'Unknown', phone: rawPhone });
+            added++;
+        });
+        renderContacts();
+        return added;
+    }
+
+    // Small dependency-free CSV parser (handles quoted fields with commas/newlines)
+    function parseCSV(text) {
+        const rows = [];
+        let row = [], field = '', inQuotes = false;
+        for (let i = 0; i < text.length; i++) {
+            const ch = text[i];
+            if (inQuotes) {
+                if (ch === '"') {
+                    if (text[i + 1] === '"') { field += '"'; i++; } else { inQuotes = false; }
+                } else {
+                    field += ch;
+                }
+            } else if (ch === '"') {
+                inQuotes = true;
+            } else if (ch === ',') {
+                row.push(field); field = '';
+            } else if (ch === '\n' || ch === '\r') {
+                if (ch === '\r' && text[i + 1] === '\n') i++;
+                row.push(field); field = '';
+                if (row.length > 1 || row[0] !== '') rows.push(row);
+                row = [];
+            } else {
+                field += ch;
+            }
+        }
+        if (field.length || row.length) { row.push(field); rows.push(row); }
+        return rows;
+    }
+
+    // Turns a 2D array (first row = header, when detectable) into {name, phone} objects
+    function rowsToContacts(rows) {
+        if (!rows || !rows.length) return [];
+        const header = rows[0].map(h => (h || '').toString().toLowerCase().trim());
+        let nameIdx = header.findIndex(h => h.includes('name'));
+        let phoneIdx = header.findIndex(h => h.includes('phone') || h.includes('mobile') || h.includes('contact') || h.includes('number') || h.includes('tel'));
+        let dataRows = rows.slice(1);
+        if (nameIdx === -1 || phoneIdx === -1) {
+            // No recognizable header — assume column A = name, column B = phone, and treat every row as data.
+            dataRows = rows;
+            nameIdx = 0;
+            phoneIdx = 1;
+        }
+        return dataRows
+            .filter(r => r && r.length)
+            .map(r => ({ name: (r[nameIdx] || '').toString().trim(), phone: (r[phoneIdx] || '').toString().trim() }))
+            .filter(c => c.phone);
+    }
+
+    // Parses one or more VCARD blocks (the format phones export contacts/groups as)
+    function parseVCard(text) {
+        const cards = text.split(/BEGIN:VCARD/i).slice(1);
+        const results = [];
+        cards.forEach(block => {
+            const lines = block.split(/\r\n|\n|\r/);
+            let name = '';
+            let phone = '';
+            lines.forEach(line => {
+                if (!name) {
+                    const fn = line.match(/^FN(?:;[^:]*)?:(.*)$/i);
+                    if (fn) name = fn[1].trim();
+                }
+                if (!name) {
+                    const n = line.match(/^N(?:;[^:]*)?:(.*)$/i);
+                    if (n) {
+                        const parts = n[1].split(';').filter(Boolean);
+                        if (parts.length) name = parts.reverse().join(' ').trim();
+                    }
+                }
+                if (!phone) {
+                    const tel = line.match(/^TEL(?:;[^:]*)?:(.*)$/i);
+                    if (tel) phone = tel[1].trim();
+                }
+            });
+            if (phone) results.push({ name: name || 'Unknown', phone });
+        });
+        return results;
     }
 
     // 1. Text-to-Speech (Spoken feedback while driving)
@@ -438,10 +737,10 @@
             item.className = 'contact-item';
             item.innerHTML = `
                 <div class="contact-info">
-                    <div class="avatar" style="background:${colorFor(c.name)}">${initials(c.name)}</div>
+                    <div class="avatar">${initials(c.name)}</div>
                     <div class="contact-text">
-                        <div class="contact-name">${c.name}</div>
-                        <div class="contact-phone">${c.phone}</div>
+                        <div class="contact-name">${c.name || 'Unknown'}</div>
+                        <div class="contact-phone">${c.phone || 'No number'}</div>
                     </div>
                 </div>
                 <a class="call-btn" href="tel:${c.phone}">📞 Call</a>
@@ -537,22 +836,22 @@
         }
     }
 
-    // 5. Contact Picker API Integration (Pull real contacts on mobile)
-    importBtn.addEventListener('click', async () => {
+    // 5a. Contact Picker API Integration (pull real contacts from the phone)
+    importPhoneBtn.addEventListener('click', async () => {
         if ('contacts' in navigator && 'ContactsManager' in window) {
             try {
                 const props = ['name', 'tel'];
                 const selected = await navigator.contacts.select(props, { multiple: true });
 
                 if (selected.length > 0) {
-                    contacts = selected
-                        .filter(c => c.tel && c.tel.length > 0)
+                    const parsed = selected
+                        .filter(c => c.tel && c.tel.length > 0 && c.tel[0])
                         .map(c => ({
-                            name: c.name ? c.name[0] : "Unknown",
+                            name: (c.name && c.name.length > 0 && c.name[0]) ? c.name[0] : "Unknown",
                             phone: c.tel[0]
                         }));
-                    renderContacts();
-                    statusText.innerText = `Imported ${contacts.length} contacts!`;
+                    const added = addContacts(parsed);
+                    statusText.innerText = `Imported ${added} new contact${added === 1 ? '' : 's'} from your phone!`;
                     speak("Contacts imported successfully.");
                 }
             } catch (err) {
@@ -560,7 +859,65 @@
                 statusText.innerText = "Import cancelled or failed.";
             }
         } else {
-            alert("Native Contact Import is only supported on mobile browsers (Android Chrome via HTTPS). Use the hardcoded list or manually add demo entries.");
+            alert("Native Contact Import is only supported on mobile browsers (Android Chrome via HTTPS). Use Excel/CSV, WhatsApp .vcf, or add contacts manually instead.");
+        }
+    });
+
+    // 5b. Excel / CSV Import — parsed entirely in the browser, nothing is uploaded anywhere
+    importExcelBtn.addEventListener('click', () => excelFileInput.click());
+    excelFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const ext = (file.name.split('.').pop() || '').toLowerCase();
+        try {
+            let rows;
+            if (ext === 'csv') {
+                const text = await file.text();
+                rows = parseCSV(text);
+            } else {
+                if (typeof XLSX === 'undefined') {
+                    statusText.innerText = "Excel support couldn't load — check your internet connection and try again, or export as .csv instead.";
+                    return;
+                }
+                const buffer = await file.arrayBuffer();
+                const workbook = XLSX.read(buffer, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+            }
+            const parsed = rowsToContacts(rows);
+            const added = addContacts(parsed);
+            statusText.innerText = `Imported ${added} new contact${added === 1 ? '' : 's'} from ${file.name}`;
+            speak(`Imported ${added} contacts from spreadsheet.`);
+        } catch (err) {
+            console.error(err);
+            statusText.innerText = "Couldn't read that file — check it has Name and Phone columns.";
+        } finally {
+            excelFileInput.value = '';
+        }
+    });
+
+    // 5c. WhatsApp group import via exported vCard (.vcf) — WhatsApp has no API for
+    // reading a group's members directly, so this reads the .vcf file the phone's
+    // contacts app exports when you share/export the group's saved contacts.
+    importVcfBtn.addEventListener('click', () => vcfFileInput.click());
+    vcfFileInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const parsed = parseVCard(text);
+            if (parsed.length === 0) {
+                statusText.innerText = "No contacts found in that file — make sure it's a .vcf export.";
+                return;
+            }
+            const added = addContacts(parsed);
+            statusText.innerText = `Imported ${added} new contact${added === 1 ? '' : 's'} from ${file.name}`;
+            speak(`Imported ${added} contacts.`);
+        } catch (err) {
+            console.error(err);
+            statusText.innerText = "Couldn't read that vCard file.";
+        } finally {
+            vcfFileInput.value = '';
         }
     });
 
@@ -568,8 +925,7 @@
         const name = prompt("Contact Name:");
         const phone = prompt("Phone Number:");
         if (name && phone) {
-            contacts.push({ name, phone });
-            renderContacts();
+            addContacts([{ name, phone }]);
         }
     });
 </script>
