@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveDial - Hands-Free Voice Assistant</title>
+    <style>
+        :root {
+            --bg: #090d16;
+            --surface: #151c2c;
+            --primary: #2563eb;
+            --listening: #dc2626;
+            --success: #16a34a;
+            --text: #ffffff;
+            --text-dim: #94a3b8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+
+        /* Large touch targets & driving UI */
+        .status-banner {
+            width: 100%;
+            padding: 20px;
+            background-color: var(--surface);
+            border-radius: 16px;
+            text-align: center;
+            font-size: 1.25rem;
+            font-weight: 600;
+            box-sizing: border-box;
+            border: 2px solid #2a3447;
+        }
+
+        .mic-button {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: none;
+            background-color: var(--primary);
+            color: white;
+            font-size: 4rem;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .mic-button.listening {
+            background-color: var(--listening);
+            box-shadow: 0 0 50px rgba(220, 38, 38, 0.8);
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+
+        .transcript-box {
+            font-size: 1.4rem;
+            font-style: italic;
+            color: var(--text-dim);
+            text-align: center;
+            min-height: 2rem;
+        }
+
+        /* Contact management */
+        .card {
+            background-color: var(--surface);
+            width: 100%;
+            border-radius: 16px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .btn {
+            background-color: #334155;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .contact-list {
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .contact-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 14px;
+            border-radius: 10px;
+        }
+
+        .contact-name { font-weight: bold; font-size: 1.1rem; }
+        .contact-phone { color: var(--text-dim); font-size: 0.9rem; }
+
+        .call-btn {
+            background-color: var(--success);
+            color: white;
+            text-decoration: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="statusBanner" class="status-banner">Tap Mic &amp; Say "Call [Name]"</div>
+    
+    <button id="micBtn" class="mic-button">🎙️</button>
+
+    <div id="transcript" class="transcript-box">"..."</div>
+
+    <div class="card">
+        <button id="importBtn" class="btn">📋 Import Phone Contacts</button>
+        <button id="addDemoBtn" class="btn" style="background:#1e293b;">+ Add Demo Contacts</button>
+        
+        <h3 style="margin-top: 15px; margin-bottom: 10px;">Loaded Contacts</h3>
+        <div id="contactList" class="contact-list"></div>
+    </div>
+</div>
+
+<script>
+    // Initial dataset with sample contacts
+    let contacts = [
+        { name: "Mom", phone: "1234567890" },
+        { name: "John Doe", phone: "5550192" },
+        { name: "Emergency", phone: "911" }
+    ];
+
+    const micBtn = document.getElementById('micBtn');
+    const statusBanner = document.getElementById('statusBanner');
+    const transcriptEl = document.getElementById('transcript');
+    const contactListEl = document.getElementById('contactList');
+    const importBtn = document.getElementById('importBtn');
+
+    // 1. Text-to-Speech (Spoken feedback while driving)
+    function speak(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel(); // Stop ongoing speech
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 1.0;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // 2. Render Contacts
+    function renderContacts() {
+        contactListEl.innerHTML = '';
+        contacts.forEach((c) => {
+            const item = document.createElement('div');
+            item.className = 'contact-item';
+            item.innerHTML = `
+                <div>
+                    <div class="contact-name">${c.name}</div>
+                    <div class="contact-phone">${c.phone}</div>
+                </div>
+                <a class="call-btn" href="tel:${c.phone}">📞 Call</a>
+            `;
+            contactListEl.appendChild(item);
+        });
+    }
+    renderContacts();
+
+    // 3. Web Speech API (Voice Recognition)
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+        statusBanner.innerText = "Browser not supported. Use Chrome or Edge.";
+        speak("Voice recognition is not supported on this browser.");
+        micBtn.disabled = true;
+    } else {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+
+        micBtn.addEventListener('click', toggleListening);
+
+        function toggleListening() {
+            if (micBtn.classList.contains('listening')) {
+                recognition.stop();
+            } else {
+                try {
+                    recognition.start();
+                } catch (e) {
+                    recognition.stop();
+                }
+            }
+        }
+
+        recognition.onstart = () => {
+            micBtn.classList.add('listening');
+            statusBanner.innerText = "Listening for command...";
+            statusBanner.style.borderColor = "var(--listening)";
+        };
+
+        recognition.onend = () => {
+            micBtn.classList.remove('listening');
+            statusBanner.style.borderColor = "#2a3447";
+        };
+
+        recognition.onresult = (event) => {
+            const spokenText = event.results[0][0].transcript;
+            transcriptEl.innerText = `"${spokenText}"`;
+            parseAndExecuteCommand(spokenText);
+        };
+
+        recognition.onerror = (event) => {
+            statusBanner.innerText = `Error: ${event.error}`;
+            micBtn.classList.remove('listening');
+        };
+    }
+
+    // 4. Natural Voice Command Processing & Fuzzy Matching
+    function parseAndExecuteCommand(text) {
+        const cleanText = text.toLowerCase().trim();
+        
+        // Match patterns like "call Mom", "dial John", or "make a call to Alice"
+        const regex = /(?:call|dial|phone)(?:\sto)?\s+(.+)/i;
+        const match = cleanText.match(regex);
+
+        let targetName = "";
+        if (match && match[1]) {
+            targetName = match[1].trim();
+        } else {
+            // Fallback: search whole phrase if "call" keyword was omitted
+            targetName = cleanText;
+        }
+
+        // Search algorithm: exact, startsWith, or includes match
+        const matchContact = contacts.find(c => {
+            const name = c.name.toLowerCase();
+            return name === targetName || name.startsWith(targetName) || targetName.includes(name);
+        });
+
+        if (matchContact) {
+            const msg = `Calling ${matchContact.name}`;
+            statusBanner.innerText = msg;
+            speak(msg);
+
+            // Brief delay so driver hears audio confirmation before phone app opens
+            setTimeout(() => {
+                window.location.href = `tel:${matchContact.phone}`;
+            }, 1500);
+        } else {
+            const failMsg = `Could not find contact matching ${targetName}`;
+            statusBanner.innerText = failMsg;
+            speak(failMsg);
+        }
+    }
+
+    // 5. Contact Picker API Integration (Pull real contacts on mobile)
+    importBtn.addEventListener('click', async () => {
+        if ('contacts' in navigator && 'ContactsManager' in window) {
+            try {
+                const props = ['name', 'tel'];
+                const selected = await navigator.contacts.select(props, { multiple: true });
+                
+                if (selected.length > 0) {
+                    contacts = selected
+                        .filter(c => c.tel && c.tel.length > 0)
+                        .map(c => ({
+                            name: c.name ? c.name[0] : "Unknown",
+                            phone: c.tel[0]
+                        }));
+                    renderContacts();
+                    statusBanner.innerText = `Imported ${contacts.length} contacts!`;
+                    speak("Contacts imported successfully.");
+                }
+            } catch (err) {
+                console.error(err);
+                statusBanner.innerText = "Import cancelled or failed.";
+            }
+        } else {
+            alert("Native Contact Import is only supported on mobile browsers (Android Chrome via HTTPS). Use the hardcoded list or manually add demo entries.");
+        }
+    });
+
+    document.getElementById('addDemoBtn').addEventListener('click', () => {
+        const name = prompt("Contact Name:");
+        const phone = prompt("Phone Number:");
+        if (name && phone) {
+            contacts.push({ name, phone });
+            renderContacts();
+        }
+    });
+</script>
+</body>
+</html>
