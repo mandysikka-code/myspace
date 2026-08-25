@@ -1,158 +1,373 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriveDial - Hands-Free Voice Assistant</title>
-    <style>
-        :root {
-            --bg: #090d16;
-            --surface: #151c2c;
-            --primary: #2563eb;
-            --listening: #dc2626;
-            --success: #16a34a;
-            --text: #ffffff;
-            --text-dim: #94a3b8;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DriveDial - Hands-Free Voice Assistant</title>
+<style>
+  :root {
+    --bg-1: #05070f;
+    --bg-2: #0c1024;
+    --surface: rgba(255,255,255,0.055);
+    --surface-solid: #131a2c;
+    --border: rgba(255,255,255,0.09);
+    --primary: #4f7cff;
+    --primary-2: #7c5cff;
+    --listening: #ff4d5e;
+    --listening-2: #ff8a5c;
+    --success: #22c98a;
+    --text: #f4f6ff;
+    --text-dim: #93a0c2;
+    --text-faint: #5c6690;
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-sm: 10px;
+  }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            box-sizing: border-box;
-        }
+  * { box-sizing: border-box; }
 
-        .container {
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 20px;
-        }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background:
+      radial-gradient(60% 50% at 15% 0%, rgba(79,124,255,0.20) 0%, rgba(79,124,255,0) 60%),
+      radial-gradient(55% 45% at 100% 15%, rgba(124,92,255,0.18) 0%, rgba(124,92,255,0) 60%),
+      radial-gradient(70% 60% at 50% 100%, rgba(34,201,138,0.08) 0%, rgba(34,201,138,0) 60%),
+      linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    background-attachment: fixed;
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 18px 40px;
+  }
 
-        /* Large touch targets & driving UI */
-        .status-banner {
-            width: 100%;
-            padding: 20px;
-            background-color: var(--surface);
-            border-radius: 16px;
-            text-align: center;
-            font-size: 1.25rem;
-            font-weight: 600;
-            box-sizing: border-box;
-            border: 2px solid #2a3447;
-        }
+  .container {
+    width: 100%;
+    max-width: 460px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
 
-        .mic-button {
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            border: none;
-            background-color: var(--primary);
-            color: white;
-            font-size: 4rem;
-            cursor: pointer;
-            box-shadow: 0 0 30px rgba(37, 99, 235, 0.4);
-            transition: all 0.2s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
+  /* ---------- Header ---------- */
+  .app-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+    margin-bottom: 4px;
+  }
+  .logo-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    background: linear-gradient(145deg, var(--primary), var(--primary-2));
+    box-shadow: 0 8px 24px rgba(79,124,255,0.35);
+    margin-bottom: 8px;
+  }
+  .app-header h1 {
+    margin: 0;
+    font-size: 1.55rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    background: linear-gradient(90deg, #ffffff, #b9c6ff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .app-header p {
+    margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-dim);
+  }
 
-        .mic-button.listening {
-            background-color: var(--listening);
-            box-shadow: 0 0 50px rgba(220, 38, 38, 0.8);
-            animation: pulse 1.5s infinite;
-        }
+  /* ---------- Status banner ---------- */
+  .status-banner {
+    width: 100%;
+    padding: 18px 20px;
+    background: var(--surface);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    border-radius: var(--radius-lg);
+    text-align: center;
+    font-size: 1.08rem;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--text-faint);
+    flex-shrink: 0;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .status-banner.is-listening {
+    border-color: rgba(255,77,94,0.45);
+    box-shadow: 0 0 0 1px rgba(255,77,94,0.15), 0 10px 30px rgba(255,77,94,0.12);
+  }
+  .status-banner.is-listening .status-dot {
+    background: var(--listening);
+    box-shadow: 0 0 12px var(--listening);
+    animation: dotPulse 1s infinite;
+  }
+  @keyframes dotPulse {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.35; }
+  }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.08); }
-            100% { transform: scale(1); }
-        }
+  /* ---------- Mic button ---------- */
+  .mic-wrap {
+    position: relative;
+    width: 190px;
+    height: 190px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .mic-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1.5px solid rgba(79,124,255,0.35);
+    opacity: 0;
+  }
+  .mic-wrap.listening .mic-ring {
+    opacity: 1;
+    animation: ringExpand 1.8s ease-out infinite;
+    border-color: rgba(255,77,94,0.55);
+  }
+  .mic-wrap.listening .mic-ring.r2 { animation-delay: 0.6s; }
+  .mic-wrap.listening .mic-ring.r3 { animation-delay: 1.2s; }
+  @keyframes ringExpand {
+    0% { transform: scale(0.78); opacity: 0.65; }
+    100% { transform: scale(1.35); opacity: 0; }
+  }
 
-        .transcript-box {
-            font-size: 1.4rem;
-            font-style: italic;
-            color: var(--text-dim);
-            text-align: center;
-            min-height: 2rem;
-        }
+  .mic-button {
+    position: relative;
+    width: 156px;
+    height: 156px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(150deg, var(--primary), var(--primary-2));
+    color: white;
+    font-size: 3.6rem;
+    cursor: pointer;
+    box-shadow: 0 12px 40px rgba(79,124,255,0.4), inset 0 1px 0 rgba(255,255,255,0.25);
+    transition: transform 0.15s ease, box-shadow 0.3s ease, background 0.3s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1;
+  }
+  .mic-button:active { transform: scale(0.96); }
+  .mic-button:disabled { opacity: 0.45; cursor: not-allowed; }
+  .mic-button.listening {
+    background: linear-gradient(150deg, var(--listening), var(--listening-2));
+    box-shadow: 0 12px 46px rgba(255,77,94,0.5), inset 0 1px 0 rgba(255,255,255,0.25);
+    animation: micPulse 1.5s infinite;
+  }
+  @keyframes micPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.045); }
+  }
 
-        /* Contact management */
-        .card {
-            background-color: var(--surface);
-            width: 100%;
-            border-radius: 16px;
-            padding: 20px;
-            box-sizing: border-box;
-        }
+  .transcript-box {
+    font-size: 1.15rem;
+    font-style: italic;
+    color: var(--text-dim);
+    text-align: center;
+    min-height: 1.6rem;
+    padding: 0 12px;
+  }
 
-        .btn {
-            background-color: #334155;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-bottom: 12px;
-        }
+  /* ---------- Cards ---------- */
+  .card {
+    background: var(--surface);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+    width: 100%;
+    border-radius: var(--radius-lg);
+    padding: 22px;
+    border: 1px solid var(--border);
+  }
 
-        .contact-list {
-            margin-top: 10px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+  .btn-row { display: flex; gap: 10px; margin-bottom: 14px; }
 
-        .contact-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 14px;
-            border-radius: 10px;
-        }
+  .btn {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    border: 1px solid var(--border);
+    padding: 13px 16px;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
+  }
+  .btn:hover { background: rgba(255,255,255,0.11); border-color: rgba(255,255,255,0.18); }
+  .btn:active { transform: scale(0.98); }
+  .btn.primary-ghost {
+    background: linear-gradient(145deg, rgba(79,124,255,0.22), rgba(124,92,255,0.16));
+    border-color: rgba(124,92,255,0.4);
+  }
+  .btn.primary-ghost:hover { background: linear-gradient(145deg, rgba(79,124,255,0.32), rgba(124,92,255,0.24)); }
 
-        .contact-name { font-weight: bold; font-size: 1.1rem; }
-        .contact-phone { color: var(--text-dim); font-size: 0.9rem; }
+  .card-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 4px 0 14px;
+  }
+  .card-heading h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .count-badge {
+    background: rgba(124,92,255,0.18);
+    color: #c9d1ff;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(124,92,255,0.35);
+  }
 
-        .call-btn {
-            background-color: var(--success);
-            color: white;
-            text-decoration: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: bold;
-        }
-    </style>
+  .contact-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .contact-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255,255,255,0.045);
+    border: 1px solid rgba(255,255,255,0.06);
+    padding: 12px 14px;
+    border-radius: var(--radius-md);
+    transition: background 0.2s ease, border-color 0.2s ease;
+  }
+  .contact-item:hover { background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.14); }
+
+  .contact-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: white;
+  }
+  .contact-text { min-width: 0; }
+  .contact-name {
+    font-weight: 700;
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .contact-phone { color: var(--text-dim); font-size: 0.82rem; }
+
+  .call-btn {
+    background: linear-gradient(145deg, var(--success), #1aa571);
+    color: white;
+    text-decoration: none;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    font-weight: 700;
+    font-size: 0.9rem;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 6px 18px rgba(34,201,138,0.28);
+    transition: transform 0.15s ease;
+  }
+  .call-btn:active { transform: scale(0.95); }
+
+  .empty-state {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 0.9rem;
+    padding: 18px 8px;
+  }
+
+  footer.hint {
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    padding: 4px 10px 0;
+  }
+
+  @media (max-width: 380px) {
+    .mic-wrap { width: 160px; height: 160px; }
+    .mic-button { width: 132px; height: 132px; font-size: 3rem; }
+  }
+</style>
 </head>
 <body>
-
 <div class="container">
-    <div id="statusBanner" class="status-banner">Tap Mic &amp; Say "Call [Name]"</div>
-    
-    <button id="micBtn" class="mic-button">🎙️</button>
 
-    <div id="transcript" class="transcript-box">"..."</div>
+  <div class="app-header">
+    <div class="logo-badge">🚗</div>
+    <h1>DriveDial</h1>
+    <p>Hands-free voice calling, built for the road</p>
+  </div>
 
-    <div class="card">
-        <button id="importBtn" class="btn">📋 Import Phone Contacts</button>
-        <button id="addDemoBtn" class="btn" style="background:#1e293b;">+ Add Demo Contacts</button>
-        
-        <h3 style="margin-top: 15px; margin-bottom: 10px;">Loaded Contacts</h3>
-        <div id="contactList" class="contact-list"></div>
+  <div id="statusBanner" class="status-banner">
+    <span class="status-dot"></span>
+    <span id="statusText">Tap the mic &amp; say "Call [Name]"</span>
+  </div>
+
+  <div class="mic-wrap" id="micWrap">
+    <span class="mic-ring r1"></span>
+    <span class="mic-ring r2"></span>
+    <span class="mic-ring r3"></span>
+    <button id="micBtn" class="mic-button" aria-label="Start voice command">🎙️</button>
+  </div>
+
+  <div id="transcript" class="transcript-box">Say a command to get started</div>
+
+  <div class="card">
+    <div class="btn-row">
+      <button id="importBtn" class="btn primary-ghost">📋 Import Contacts</button>
     </div>
+    <button id="addDemoBtn" class="btn">➕ Add Contact</button>
+
+    <div class="card-heading">
+      <h3>Loaded Contacts</h3>
+      <span id="contactCount" class="count-badge">0</span>
+    </div>
+    <div id="contactList" class="contact-list"></div>
+  </div>
+
+  <footer class="hint">Works best in Chrome or Edge, with mic access allowed.<br>Please keep your eyes on the road.</footer>
 </div>
 
 <script>
@@ -164,10 +379,36 @@
     ];
 
     const micBtn = document.getElementById('micBtn');
+    const micWrap = document.getElementById('micWrap');
     const statusBanner = document.getElementById('statusBanner');
+    const statusText = document.getElementById('statusText');
     const transcriptEl = document.getElementById('transcript');
     const contactListEl = document.getElementById('contactList');
+    const contactCountEl = document.getElementById('contactCount');
     const importBtn = document.getElementById('importBtn');
+
+    const AVATAR_GRADIENTS = [
+        ['#4f7cff', '#7c5cff'],
+        ['#22c98a', '#1aa571'],
+        ['#ff8a5c', '#ff4d5e'],
+        ['#f7b733', '#fc4a1a'],
+        ['#7c5cff', '#c96bff'],
+        ['#00c6ff', '#4f7cff']
+    ];
+
+    function initials(name) {
+        const parts = name.trim().split(/\s+/).filter(Boolean);
+        if (parts.length === 0) return '?';
+        if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+
+    function colorFor(name) {
+        let hash = 0;
+        for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        const pair = AVATAR_GRADIENTS[Math.abs(hash) % AVATAR_GRADIENTS.length];
+        return `linear-gradient(145deg, ${pair[0]}, ${pair[1]})`;
+    }
 
     // 1. Text-to-Speech (Spoken feedback while driving)
     function speak(text) {
@@ -182,13 +423,26 @@
     // 2. Render Contacts
     function renderContacts() {
         contactListEl.innerHTML = '';
+        contactCountEl.textContent = contacts.length;
+
+        if (contacts.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'empty-state';
+            empty.textContent = 'No contacts yet — import your phone contacts or add one.';
+            contactListEl.appendChild(empty);
+            return;
+        }
+
         contacts.forEach((c) => {
             const item = document.createElement('div');
             item.className = 'contact-item';
             item.innerHTML = `
-                <div>
-                    <div class="contact-name">${c.name}</div>
-                    <div class="contact-phone">${c.phone}</div>
+                <div class="contact-info">
+                    <div class="avatar" style="background:${colorFor(c.name)}">${initials(c.name)}</div>
+                    <div class="contact-text">
+                        <div class="contact-name">${c.name}</div>
+                        <div class="contact-phone">${c.phone}</div>
+                    </div>
                 </div>
                 <a class="call-btn" href="tel:${c.phone}">📞 Call</a>
             `;
@@ -199,9 +453,8 @@
 
     // 3. Web Speech API (Voice Recognition)
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
     if (!SpeechRecognition) {
-        statusBanner.innerText = "Browser not supported. Use Chrome or Edge.";
+        statusText.innerText = "Browser not supported. Use Chrome or Edge.";
         speak("Voice recognition is not supported on this browser.");
         micBtn.disabled = true;
     } else {
@@ -226,35 +479,35 @@
 
         recognition.onstart = () => {
             micBtn.classList.add('listening');
-            statusBanner.innerText = "Listening for command...";
-            statusBanner.style.borderColor = "var(--listening)";
+            micWrap.classList.add('listening');
+            statusBanner.classList.add('is-listening');
+            statusText.innerText = "Listening for command...";
         };
-
         recognition.onend = () => {
             micBtn.classList.remove('listening');
-            statusBanner.style.borderColor = "#2a3447";
+            micWrap.classList.remove('listening');
+            statusBanner.classList.remove('is-listening');
         };
-
         recognition.onresult = (event) => {
             const spokenText = event.results[0][0].transcript;
             transcriptEl.innerText = `"${spokenText}"`;
             parseAndExecuteCommand(spokenText);
         };
-
         recognition.onerror = (event) => {
-            statusBanner.innerText = `Error: ${event.error}`;
+            statusText.innerText = `Error: ${event.error}`;
             micBtn.classList.remove('listening');
+            micWrap.classList.remove('listening');
+            statusBanner.classList.remove('is-listening');
         };
     }
 
     // 4. Natural Voice Command Processing & Fuzzy Matching
     function parseAndExecuteCommand(text) {
         const cleanText = text.toLowerCase().trim();
-        
+
         // Match patterns like "call Mom", "dial John", or "make a call to Alice"
         const regex = /(?:call|dial|phone)(?:\sto)?\s+(.+)/i;
         const match = cleanText.match(regex);
-
         let targetName = "";
         if (match && match[1]) {
             targetName = match[1].trim();
@@ -271,16 +524,15 @@
 
         if (matchContact) {
             const msg = `Calling ${matchContact.name}`;
-            statusBanner.innerText = msg;
+            statusText.innerText = msg;
             speak(msg);
-
             // Brief delay so driver hears audio confirmation before phone app opens
             setTimeout(() => {
                 window.location.href = `tel:${matchContact.phone}`;
             }, 1500);
         } else {
             const failMsg = `Could not find contact matching ${targetName}`;
-            statusBanner.innerText = failMsg;
+            statusText.innerText = failMsg;
             speak(failMsg);
         }
     }
@@ -291,7 +543,7 @@
             try {
                 const props = ['name', 'tel'];
                 const selected = await navigator.contacts.select(props, { multiple: true });
-                
+
                 if (selected.length > 0) {
                     contacts = selected
                         .filter(c => c.tel && c.tel.length > 0)
@@ -300,12 +552,12 @@
                             phone: c.tel[0]
                         }));
                     renderContacts();
-                    statusBanner.innerText = `Imported ${contacts.length} contacts!`;
+                    statusText.innerText = `Imported ${contacts.length} contacts!`;
                     speak("Contacts imported successfully.");
                 }
             } catch (err) {
                 console.error(err);
-                statusBanner.innerText = "Import cancelled or failed.";
+                statusText.innerText = "Import cancelled or failed.";
             }
         } else {
             alert("Native Contact Import is only supported on mobile browsers (Android Chrome via HTTPS). Use the hardcoded list or manually add demo entries.");
